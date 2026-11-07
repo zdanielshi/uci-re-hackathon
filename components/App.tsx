@@ -409,6 +409,24 @@ function Console({ targets }: { targets: Official[] }) {
     return () => clearTimeout(t);
   }, [mayor]);
 
+  const [gold, setGold] = useState<Ev | null>(null);
+  useEffect(() => {
+    const t = setTimeout(() => {
+      const now = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit", second: "2-digit" });
+      const ev: Ev = {
+        id: evId.current++, t: now, icon: "🇺🇸", who: "President Donald J. Trump", tag: "Supportive",
+        text: "GREAT idea! Nobody knows housing like me. We are going to SLASH home prices — bigly, like never before. Build, baby, build! Thank you for your attention to this matter!",
+        sub: "Parody · simulated",
+      };
+      setReplies((rs) => [ev, ...rs]);
+      setFeed((f) => [{ ...ev, id: evId.current++, text: "Replied — SUPPORTIVE 🇺🇸 \"Thank you for your attention to this matter!\"" }, ...f]);
+      setWin(null);
+      setGold(ev);
+      try { navigator.vibrate?.([120, 60, 120, 60, 250]); } catch {}
+    }, 45000);
+    return () => clearTimeout(t);
+  }, []);
+
   useEffect(() => {
     const iv = setInterval(() => {
       const k = tick.current++;
@@ -519,6 +537,7 @@ function Console({ targets }: { targets: Official[] }) {
           ))}
         </ul>
       )}
+      {gold && <GoldModal ev={gold} onView={() => { setGold(null); setTab("replies"); }} onClose={() => setGold(null)} />}
       {win && mayor && <WinModal ev={win} mayor={mayor} onView={() => { setWin(null); setTab("replies"); }} onClose={() => setWin(null)} />}
     </div>
   );
@@ -565,6 +584,57 @@ function WinModal({ ev, mayor, onView, onClose }: { ev: Ev; mayor: Official; onV
         </div>
         <button onClick={onView} className="mt-5 w-full rounded-xl bg-blue-700 py-3 text-[15px] font-semibold text-white active:bg-blue-800">View reply</button>
         <button onClick={onClose} className="mt-2 w-full py-2 text-sm font-medium text-slate-500">Keep the campaign going</button>
+      </div>
+    </div>
+  );
+}
+
+const GOLD = ["#f5d061", "#d4af37", "#b8860b", "#fff4c2", "#c8102e", "#0a3161"];
+
+function GoldModal({ ev, onView, onClose }: { ev: Ev; onView: () => void; onClose: () => void }) {
+  const pieces = useMemo(() => Array.from({ length: 120 }, (_, i) => ({
+    left: Math.random() * 100, delay: Math.random() * 0.8, dur: 2.4 + Math.random() * 2,
+    size: 7 + Math.random() * 7, color: GOLD[i % GOLD.length], rot: Math.random() * 360, star: i % 6 === 0,
+  })), []);
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-5" onClick={onClose}>
+      <div className="pointer-events-none fixed inset-0 z-10 overflow-hidden">
+        {pieces.map((c, i) => c.star ? (
+          <span key={i} className="absolute top-[-24px] block text-lg" style={{ left: `${c.left}%`, color: "#f5d061", animation: `confetti ${c.dur}s ${c.delay}s cubic-bezier(.2,.6,.4,1) forwards` }}>★</span>
+        ) : (
+          <span key={i} className="absolute top-[-20px] block" style={{
+            left: `${c.left}%`, width: c.size, height: c.size * 0.45, background: c.color, borderRadius: "2px",
+            transform: `rotate(${c.rot}deg)`, animation: `confetti ${c.dur}s ${c.delay}s cubic-bezier(.2,.6,.4,1) forwards`,
+          }} />
+        ))}
+      </div>
+      <div className="relative w-full max-w-sm animate-[pop_.5s_cubic-bezier(.2,1.5,.4,1)] rounded-3xl p-[3px] shadow-[0_0_60px_rgba(212,175,55,.6)]"
+        style={{ background: "linear-gradient(135deg,#fff4c2,#d4af37 30%,#8a6d1d 50%,#f5d061 70%,#b8860b)" }}
+        onClick={(e) => e.stopPropagation()}>
+        <div className="rounded-[22px] bg-[#0b1a33] p-6 text-center">
+          <div className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#d4af37]">★ ★ ★ Breaking ★ ★ ★</div>
+          <div className="mt-3 font-serif text-[28px] font-black uppercase leading-tight tracking-tight"
+            style={{ background: "linear-gradient(180deg,#fff4c2,#f5d061 40%,#b8860b)", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" }}>
+            The President<br />says YES!
+          </div>
+          <div className="mt-4 flex items-center justify-center gap-3">
+            <div className="grid h-12 w-12 place-items-center rounded-full font-serif text-sm font-black text-[#0b1a33] ring-2 ring-[#f5d061]"
+              style={{ background: "linear-gradient(135deg,#fff4c2,#d4af37,#b8860b)" }}>DJT</div>
+            <div className="text-left">
+              <div className="text-sm font-bold text-white">Donald J. Trump</div>
+              <div className="text-xs text-[#d4af37]">President of the United States</div>
+            </div>
+          </div>
+          <p className="mt-4 rounded-2xl border border-[#d4af37]/40 bg-white/5 p-4 text-left font-serif text-[16px] font-semibold leading-relaxed text-[#fff4c2]">&ldquo;{ev.text}&rdquo;</p>
+          <div className="mt-3 flex justify-center gap-2 text-[11px] font-bold">
+            <span className="rounded-full bg-[#d4af37]/15 px-2 py-1 text-[#f5d061]">🇺🇸 Federal attention</span>
+            <span className="rounded-full bg-[#d4af37]/15 px-2 py-1 text-[#f5d061]">🏗️ Build, baby, build</span>
+          </div>
+          <button onClick={onView} className="mt-5 w-full rounded-xl py-3 text-[15px] font-black uppercase tracking-wide text-[#0b1a33] active:opacity-90"
+            style={{ background: "linear-gradient(180deg,#fff4c2,#f5d061 40%,#d4af37 70%,#b8860b)" }}>Tremendous. View reply</button>
+          <button onClick={onClose} className="mt-2 w-full py-2 text-sm font-medium text-[#d4af37]/80">Keep the campaign going</button>
+          <div className="mt-1 text-[10px] text-white/40">Parody · simulated reply</div>
+        </div>
       </div>
     </div>
   );
