@@ -21,25 +21,49 @@ export default function App() {
     setSelected(new Set(officials.map((o) => o.id)));
   }, [officials]);
 
+  // Navigation synced with browser history so the header back button and iOS swipe-back both work.
+  const go = (next: Step, replace = false) => {
+    setStep(next);
+    try {
+      // Preserve Next.js router state (__NA etc.) so its popstate handler doesn't force a reload.
+      const st = { ...(history.state ?? {}), step: next };
+      if (replace) history.replaceState(st, ""); else history.pushState(st, "");
+    } catch {}
+  };
+  const back = () => {
+    if (history.state?.step) history.back();
+    else setStep(PREV[step] ?? "setup");
+  };
+  useEffect(() => {
+    try { history.replaceState({ ...(history.state ?? {}), step: "setup" }, ""); } catch {}
+    const onPop = (e: PopStateEvent) => {
+      const s = (e.state?.step as Step | undefined) ?? "setup";
+      setStep(s === "scan" ? "setup" : s);
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+  useEffect(() => { window.scrollTo(0, 0); }, [step]);
+
   const targets = officials.filter((o) => selected.has(o.id)).sort((a, b) => priority(b) - priority(a));
 
   return (
     <div className="min-h-dvh bg-slate-100">
       <div className="mx-auto flex min-h-dvh max-w-md flex-col bg-white shadow-sm">
-        <Header step={step} onReset={() => setStep("setup")} />
+        <Header step={step} onBack={step === "setup" || step === "scan" ? undefined : back} onReset={() => go("setup")} />
         <main className="flex-1 px-4 pb-28 pt-4">
           {step === "setup" && (
-            <Setup county={county} setCounty={setCounty} agenda={agenda} setAgenda={setAgenda} persona={persona} setPersona={setPersona} onGo={() => setStep("scan")} />
+            <Setup county={county} setCounty={setCounty} agenda={agenda} setAgenda={setAgenda} persona={persona} setPersona={setPersona} onGo={() => go("scan")} />
           )}
-          {step === "scan" && <Scan county={county} count={officials.length} onDone={() => setStep("map")} />}
+          {step === "scan" && <Scan county={county} count={officials.length} onDone={() => go("map", true)} />}
           {step === "map" && (
             <PowerMap
               officials={officials} seeded={seeded} county={county} selected={selected}
               toggle={(id) => setSelected((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; })}
-              onNext={() => setStep("campaign")}
+              onNext={() => go("campaign")} onBack={back}
             />
           )}
-          {step === "campaign" && <Campaign targets={targets} persona={persona} agenda={agenda} onLaunch={() => setStep("console")} />}
+          {step === "campaign" && <Campaign targets={targets} persona={persona} agenda={agenda} onLaunch={() => go("console")} onBack={back} />}
           {step === "console" && <Console targets={targets} />}
         </main>
         <footer className="px-4 pb-6 text-center text-[11px] leading-snug text-slate-400">
@@ -59,12 +83,19 @@ const STEPS: { id: Step; label: string }[] = [
   { id: "console", label: "Launch" },
 ];
 
-function Header({ step, onReset }: { step: Step; onReset: () => void }) {
+const PREV: Partial<Record<Step, Step>> = { map: "setup", campaign: "map", console: "campaign" };
+
+function Header({ step, onBack, onReset }: { step: Step; onBack?: () => void; onReset: () => void }) {
   const idx = STEPS.findIndex((s) => s.id === (step === "scan" ? "setup" : step));
   return (
     <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 px-4 pb-3 pt-4 backdrop-blur">
-      <div className="flex items-center justify-between">
-        <button onClick={onReset} className="flex items-center gap-2">
+      <div className="flex items-center justify-between gap-2">
+        {onBack && (
+          <button onClick={onBack} aria-label="Back" className="-ml-1 grid h-9 w-9 shrink-0 place-items-center rounded-full text-slate-700 active:bg-slate-100">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+          </button>
+        )}
+        <button onClick={onReset} className="mr-auto flex min-w-0 items-center gap-2">
           <span className="grid h-8 w-8 place-items-center rounded-lg bg-blue-700 text-sm font-bold text-white">BB</span>
           <span className="text-left">
             <span className="block text-[15px] font-semibold leading-tight text-slate-900">Build Baby Build</span>
@@ -87,10 +118,15 @@ function Header({ step, onReset }: { step: Step; onReset: () => void }) {
 
 /* ---------------- Shared ---------------- */
 
-function PrimaryButton({ children, onClick }: { children: React.ReactNode; onClick: () => void }) {
+function PrimaryButton({ children, onClick, onBack }: { children: React.ReactNode; onClick: () => void; onBack?: () => void }) {
   return (
-    <div className="fixed inset-x-0 bottom-0 z-30 mx-auto max-w-md border-t border-slate-200 bg-white/95 px-4 pb-[max(16px,env(safe-area-inset-bottom))] pt-3 backdrop-blur">
-      <button onClick={onClick} className="w-full rounded-xl bg-blue-700 py-3.5 text-[15px] font-semibold text-white shadow-sm active:bg-blue-800">
+    <div className="fixed inset-x-0 bottom-0 z-30 mx-auto flex max-w-md gap-2 border-t border-slate-200 bg-white/95 px-4 pb-[max(16px,env(safe-area-inset-bottom))] pt-3 backdrop-blur">
+      {onBack && (
+        <button onClick={onBack} className="shrink-0 rounded-xl border border-slate-300 px-4 py-3.5 text-[15px] font-semibold text-slate-700 active:bg-slate-100">
+          ← Back
+        </button>
+      )}
+      <button onClick={onClick} className="min-w-0 flex-1 truncate rounded-xl bg-blue-700 px-3 py-3.5 text-[15px] font-semibold text-white shadow-sm active:bg-blue-800">
         {children}
       </button>
     </div>
@@ -196,7 +232,7 @@ function Scan({ county, count, onDone }: { county: string; count: number; onDone
 
 /* ---------------- Power Map ---------------- */
 
-function PowerMap(p: { officials: Official[]; seeded: boolean; county: string; selected: Set<string>; toggle: (id: string) => void; onNext: () => void }) {
+function PowerMap(p: { officials: Official[]; seeded: boolean; county: string; selected: Set<string>; toggle: (id: string) => void; onNext: () => void; onBack: () => void }) {
   const [open, setOpen] = useState<Official | null>(null);
   const counts = { Champion: 0, Persuadable: 0, Skeptic: 0 } as Record<string, number>;
   p.officials.forEach((o) => counts[o.stance]++);
@@ -243,7 +279,7 @@ function PowerMap(p: { officials: Official[]; seeded: boolean; county: string; s
       })}
 
       {open && <Sheet o={open} onClose={() => setOpen(null)} />}
-      <PrimaryButton onClick={p.onNext}>Draft campaign for {p.selected.size} targets →</PrimaryButton>
+      <PrimaryButton onClick={p.onNext} onBack={p.onBack}>Draft {p.selected.size} messages →</PrimaryButton>
     </div>
   );
 }
@@ -309,7 +345,7 @@ function Typewriter({ text }: { text: string }) {
   return <>{text.slice(0, n)}{n < text.length && <span className="animate-pulse">▍</span>}</>;
 }
 
-function Campaign({ targets, persona, agenda, onLaunch }: { targets: Official[]; persona: PersonaId; agenda: AgendaId; onLaunch: () => void }) {
+function Campaign({ targets, persona, agenda, onLaunch, onBack }: { targets: Official[]; persona: PersonaId; agenda: AgendaId; onLaunch: () => void; onBack: () => void }) {
   const [i, setI] = useState(0);
   const [tab, setTab] = useState<"email" | "call">("email");
   const o = targets[i];
@@ -363,7 +399,7 @@ function Campaign({ targets, persona, agenda, onLaunch }: { targets: Official[];
         <b>Plan:</b> Email all targets → call top {Math.min(10, targets.length)} offices → auto follow-up on replies within 48h → draft public comments for next meetings.
       </div>
 
-      <PrimaryButton onClick={onLaunch}>🚀 Launch campaign</PrimaryButton>
+      <PrimaryButton onClick={onLaunch} onBack={onBack}>🚀 Launch campaign</PrimaryButton>
     </div>
   );
 }
