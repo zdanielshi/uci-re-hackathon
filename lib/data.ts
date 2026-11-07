@@ -15,7 +15,38 @@ export type Official = {
   phone: string;
 };
 
-export const AGENDA = "Affordable housing / zoning reform";
+export const AGENDAS = [
+  {
+    id: "zoning", emoji: "🏗️", label: "Affordable housing / zoning reform", sub: "More homes, faster approvals, lower rents",
+    topic: "more homes in Orange County",
+    stat: "Orange County needs roughly 180,000 new homes this cycle. We're not asking for a miracle. We're asking for a vote.",
+    asks: { County: "agendize a vote to open county surplus land for affordable homes", City: "fast-track by-right approvals for projects that meet your Housing Element", Agency: "prioritize shovel-ready affordable projects in the next funding round", State: "co-sponsor permit-streamlining legislation for homes near jobs and transit" },
+    subject: "Build, baby, build",
+  },
+  {
+    id: "tenants", emoji: "🔑", label: "Tenant protections / rent stabilization", sub: "Fewer evictions, predictable rents",
+    topic: "stronger tenant protections",
+    stat: "Over half of OC renters are rent-burdened. One surprise increase is the difference between staying and leaving.",
+    asks: { County: "fund a countywide eviction-defense and right-to-counsel program", City: "adopt a local rent-increase cap and just-cause ordinance", Agency: "expand emergency rental assistance before the next eviction wave", State: "support legislation closing loopholes in the Tenant Protection Act" },
+    subject: "Keep OC renters in OC",
+  },
+  {
+    id: "homeless", emoji: "🏠", label: "Homelessness / supportive housing", sub: "Housing first, services that stick",
+    topic: "supportive housing for unhoused neighbors",
+    stat: "Thousands of Orange County residents are unhoused on any given night. Shelter beds are a start — keys are the solution.",
+    asks: { County: "commit dedicated county funding to permanent supportive housing units", City: "zone for supportive housing and approve a navigation center site", Agency: "pair every new voucher with wraparound services", State: "protect Homekey and HHAP funding in the next budget" },
+    subject: "Keys, not just beds",
+  },
+  {
+    id: "transit", emoji: "🚆", label: "Homes near transit / missing middle", sub: "Duplexes, ADUs, and apartments by the train",
+    topic: "homes near transit and missing-middle housing",
+    stat: "Most OC land is zoned single-family only. Townhomes and duplexes near transit are illegal to build in much of the county.",
+    asks: { County: "pilot missing-middle zoning on county unincorporated land", City: "legalize fourplexes and ADUs by right near Metrolink and OC Streetcar", Agency: "tie transportation dollars to housing near stations", State: "back transit-oriented housing legislation with real teeth" },
+    subject: "Let us build the missing middle",
+  },
+] as const;
+export type AgendaId = (typeof AGENDAS)[number]["id"];
+export const getAgenda = (id: AgendaId) => AGENDAS.find((a) => a.id === id)!;
 
 export const PERSONAS = [
   { id: "renter", label: "Renter / constituent" },
@@ -96,27 +127,24 @@ const personaLine: Record<PersonaId, string> = {
   builder: "We represent builders, trades, and neighbors who are ready to build homes in Orange County — if the rules let us.",
 };
 
-export function draftEmail(o: Official, persona: PersonaId) {
+export function draftEmail(o: Official, persona: PersonaId, agendaId: AgendaId = "zoning") {
+  const ag = getAgenda(agendaId);
   const first = o.tier === "City" && o.name.includes("Council") ? "Councilmembers" : o.name.split(" ").slice(-1)[0];
   const salutation = o.tier === "Agency" || o.name.includes("Council") ? `Dear ${o.name}` : `Dear ${o.title.split(",")[0].replace(/Mayor of .*/, "Mayor")} ${first}`;
   const subjects = [
-    `Build, baby, build: ${o.hook.toLowerCase()}`,
+    `${ag.subject}: ${o.hook.toLowerCase()}`,
     `A quick idea re: ${o.hook.toLowerCase()}`,
     `Homes > hearings (respectfully)`,
   ];
   const subject = subjects[o.name.length % subjects.length];
-  const ask =
-    o.tier === "County" ? "agendize a vote to open county surplus land for affordable homes"
-    : o.tier === "City" ? "fast-track by-right approvals for projects that meet your Housing Element"
-    : o.tier === "Agency" ? "prioritize shovel-ready affordable projects in the next funding round"
-    : "co-sponsor permit-streamlining legislation for homes near jobs and transit";
+  const ask = ag.asks[o.tier === "County" || o.tier === "City" || o.tier === "Agency" ? o.tier : "State"];
   const body = `${salutation},
 
 ${personaLine[persona]}
 
-You've got real leverage here: ${o.why.charAt(0).toLowerCase() + o.why.slice(1)} So we'll get right to it — ${o.hook.toLowerCase()} is the kind of problem that gets solved with permits, not panels.
+You've got real leverage here: ${o.why.charAt(0).toLowerCase() + o.why.slice(1)} So we'll get right to it: ${ag.topic}. ${o.hook} is the kind of problem that gets solved with votes, not panels.
 
-Orange County needs roughly 180,000 new homes this cycle. We're not asking for a miracle. We're asking for a vote.
+${ag.stat}
 
 Specifically, will you ${ask}?
 
@@ -127,8 +155,8 @@ Build Baby Build`;
   return { subject, body };
 }
 
-export function callScript(o: Official) {
-  return `Hi, my name is ___ and I'm a constituent calling for ${o.name}. I'm asking them to support more homes in Orange County — specifically around ${o.hook.toLowerCase()}. Could you log my call and let me know their position? Thanks — and thank you for answering the phone, genuinely.`;
+export function callScript(o: Official, agendaId: AgendaId = "zoning") {
+  return `Hi, my name is ___ and I'm a constituent calling for ${o.name}. I'm asking them to support ${getAgenda(agendaId).topic} — specifically around ${o.hook.toLowerCase()}. Could you log my call and let me know their position? Thanks — and thank you for answering the phone, genuinely.`;
 }
 
 export type Sentiment = "Supportive" | "Noncommittal" | "Opposed";

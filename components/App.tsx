@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  AGENDA, COUNTIES, PERSONAS, TIERS, CALL_SNIPPETS, FOLLOWUP_LINES,
-  type Official, type PersonaId, type Sentiment,
+  AGENDAS, COUNTIES, PERSONAS, TIERS, CALL_SNIPPETS, FOLLOWUP_LINES,
+  type Official, type PersonaId, type AgendaId, type Sentiment,
   getOfficials, priority, draftEmail, callScript, replyFor,
 } from "@/lib/data";
 
@@ -13,6 +13,7 @@ export default function App() {
   const [step, setStep] = useState<Step>("setup");
   const [county, setCounty] = useState(COUNTIES[0]);
   const [persona, setPersona] = useState<PersonaId>("renter");
+  const [agenda, setAgenda] = useState<AgendaId>("zoning");
   const { officials, seeded } = useMemo(() => getOfficials(county), [county]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
@@ -28,7 +29,7 @@ export default function App() {
         <Header step={step} onReset={() => setStep("setup")} />
         <main className="flex-1 px-4 pb-28 pt-4">
           {step === "setup" && (
-            <Setup county={county} setCounty={setCounty} persona={persona} setPersona={setPersona} onGo={() => setStep("scan")} />
+            <Setup county={county} setCounty={setCounty} agenda={agenda} setAgenda={setAgenda} persona={persona} setPersona={setPersona} onGo={() => setStep("scan")} />
           )}
           {step === "scan" && <Scan county={county} count={officials.length} onDone={() => setStep("map")} />}
           {step === "map" && (
@@ -38,7 +39,7 @@ export default function App() {
               onNext={() => setStep("campaign")}
             />
           )}
-          {step === "campaign" && <Campaign targets={targets} persona={persona} onLaunch={() => setStep("console")} />}
+          {step === "campaign" && <Campaign targets={targets} persona={persona} agenda={agenda} onLaunch={() => setStep("console")} />}
           {step === "console" && <Console targets={targets} />}
         </main>
         <footer className="px-4 pb-6 text-center text-[11px] leading-snug text-slate-400">
@@ -113,7 +114,7 @@ function Pill({ s }: { s: string }) {
 
 /* ---------------- Setup ---------------- */
 
-function Setup(p: { county: string; setCounty: (c: string) => void; persona: PersonaId; setPersona: (x: PersonaId) => void; onGo: () => void }) {
+function Setup(p: { county: string; setCounty: (c: string) => void; agenda: AgendaId; setAgenda: (a: AgendaId) => void; persona: PersonaId; setPersona: (x: PersonaId) => void; onGo: () => void }) {
   return (
     <div className="space-y-5">
       <div>
@@ -130,12 +131,17 @@ function Setup(p: { county: string; setCounty: (c: string) => void; persona: Per
 
       <div>
         <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Agenda</span>
-        <div className="mt-1.5 flex items-center gap-3 rounded-xl border-2 border-blue-700 bg-blue-50 px-3 py-3">
-          <span className="text-xl">🏗️</span>
-          <div>
-            <div className="text-[15px] font-semibold text-slate-900">{AGENDA}</div>
-            <div className="text-xs text-slate-600">More homes, faster approvals, lower rents</div>
-          </div>
+        <div className="mt-1.5 grid gap-2">
+          {AGENDAS.map((a) => (
+            <button key={a.id} onClick={() => p.setAgenda(a.id)}
+              className={`flex items-center gap-3 rounded-xl px-3 py-3 text-left ${p.agenda === a.id ? "border-2 border-blue-700 bg-blue-50" : "border border-slate-300"}`}>
+              <span className="text-xl">{a.emoji}</span>
+              <span>
+                <span className={`block text-[15px] ${p.agenda === a.id ? "font-semibold text-slate-900" : "text-slate-800"}`}>{a.label}</span>
+                <span className="block text-xs text-slate-600">{a.sub}</span>
+              </span>
+            </button>
+          ))}
         </div>
       </div>
 
@@ -303,12 +309,12 @@ function Typewriter({ text }: { text: string }) {
   return <>{text.slice(0, n)}{n < text.length && <span className="animate-pulse">▍</span>}</>;
 }
 
-function Campaign({ targets, persona, onLaunch }: { targets: Official[]; persona: PersonaId; onLaunch: () => void }) {
+function Campaign({ targets, persona, agenda, onLaunch }: { targets: Official[]; persona: PersonaId; agenda: AgendaId; onLaunch: () => void }) {
   const [i, setI] = useState(0);
   const [tab, setTab] = useState<"email" | "call">("email");
   const o = targets[i];
   if (!o) return <p className="text-sm text-slate-600">No targets selected.</p>;
-  const email = draftEmail(o, persona);
+  const email = draftEmail(o, persona, agenda);
   return (
     <div className="space-y-4">
       <div>
@@ -345,10 +351,10 @@ function Campaign({ targets, persona, onLaunch }: { targets: Official[]; persona
             <>
               <div className="text-xs text-slate-500">Subject</div>
               <div className="mb-2 text-sm font-semibold text-slate-900">{email.subject}</div>
-              <pre className="whitespace-pre-wrap font-sans text-[13px] leading-relaxed text-slate-800"><Typewriter key={o.id + persona} text={email.body} /></pre>
+              <pre className="whitespace-pre-wrap font-sans text-[13px] leading-relaxed text-slate-800"><Typewriter key={o.id + persona + agenda} text={email.body} /></pre>
             </>
           ) : (
-            <p className="text-[13px] leading-relaxed text-slate-800"><Typewriter key={o.id + "call"} text={callScript(o)} /></p>
+            <p className="text-[13px] leading-relaxed text-slate-800"><Typewriter key={o.id + "call" + agenda} text={callScript(o, agenda)} /></p>
           )}
         </div>
       </div>
