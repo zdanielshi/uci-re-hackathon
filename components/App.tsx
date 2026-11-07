@@ -384,6 +384,30 @@ function Console({ targets }: { targets: Official[] }) {
   const [tab, setTab] = useState<"feed" | "replies">("feed");
   const tick = useRef(0);
   const evId = useRef(0);
+  const mayor = useMemo(
+    () => targets.find((t) => t.id === "agran") ?? targets.find((t) => t.tier === "City" && /mayor/i.test(t.name + t.title)) ?? targets.find((t) => t.tier === "City"),
+    [targets]
+  );
+  const pool = useMemo(() => { const p = targets.filter((t) => t.id !== mayor?.id); return p.length ? p : targets; }, [targets, mayor]);
+  const [win, setWin] = useState<Ev | null>(null);
+
+  useEffect(() => {
+    if (!mayor) return;
+    const t = setTimeout(() => {
+      const now = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit", second: "2-digit" });
+      const label = mayor.name.includes("Mayor") ? "the Mayor" : `Mayor ${mayor.name.split(" ").slice(-1)[0]}`;
+      const ev: Ev = {
+        id: evId.current++, t: now, icon: "🎉", who: mayor.name, tag: "Supportive",
+        text: `${label} is supportive. Let's meet next week — we'd like to bring this to City Council as an agenda item. Our scheduler will reach out today.`,
+        sub: mayor.title,
+      };
+      setReplies((rs) => [ev, ...rs]);
+      setFeed((f) => [{ ...ev, id: evId.current++, text: "Replied — SUPPORTIVE ⭐ Meeting + council agenda item" }, ...f]);
+      setWin(ev);
+      try { navigator.vibrate?.([80, 40, 120]); } catch {}
+    }, 15000);
+    return () => clearTimeout(t);
+  }, [mayor]);
 
   useEffect(() => {
     const iv = setInterval(() => {
@@ -408,7 +432,7 @@ function Console({ targets }: { targets: Official[] }) {
           const vm = (j / 2) % 3 === 2;
           push({ icon: vm ? "📼" : "📞", who: c.name, text: vm ? "Voicemail left (0:42)" : `Call connected (${1 + (j % 3)}:${String(10 + j * 7 % 50).padStart(2, "0")})`, sub: vm ? undefined : CALL_SNIPPETS[(j / 2) % CALL_SNIPPETS.length] });
         } else {
-          const r = targets[(j * 3) % N];
+          const r = pool[(j * 3) % pool.length];
           setOpened((x) => Math.min(N, x + 2));
           const rep = replyFor(r, j);
           const ev = { icon: "💬", who: r.name, text: rep.text, tag: rep.s };
@@ -423,14 +447,15 @@ function Console({ targets }: { targets: Official[] }) {
       else if (m === 1) { push({ icon: "🤖", who: o.name, text: FOLLOWUP_LINES[j % FOLLOWUP_LINES.length] }); }
       else if (m === 2) { setComments((x) => x + 1); push({ icon: "📝", who: o.jurisdiction, text: "Public comment submitted for next meeting" }); }
       else {
-        const rep = replyFor(o, j);
-        const ev = { icon: "💬", who: o.name, text: rep.text, tag: rep.s };
+        const ro = pool[j % pool.length];
+        const rep = replyFor(ro, j);
+        const ev = { icon: "💬", who: ro.name, text: rep.text, tag: rep.s };
         push({ ...ev, text: `Replied — ${rep.s.toLowerCase()}` });
         setReplies((rs) => [{ ...ev, id: evId.current++, t: now }, ...rs].slice(0, 40));
       }
     }, 700);
     return () => clearInterval(iv);
-  }, [targets, N, callTotal]);
+  }, [targets, N, callTotal, pool]);
 
   const sup = replies.filter((r) => r.tag === "Supportive").length;
   const non = replies.filter((r) => r.tag === "Noncommittal").length;
@@ -494,6 +519,53 @@ function Console({ targets }: { targets: Official[] }) {
           ))}
         </ul>
       )}
+      {win && mayor && <WinModal ev={win} mayor={mayor} onView={() => { setWin(null); setTab("replies"); }} onClose={() => setWin(null)} />}
+    </div>
+  );
+}
+
+const CONFETTI_COLORS = ["#1d4ed8", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4"];
+
+function WinModal({ ev, mayor, onView, onClose }: { ev: Ev; mayor: Official; onView: () => void; onClose: () => void }) {
+  const pieces = useMemo(() => Array.from({ length: 80 }, (_, i) => ({
+    left: Math.random() * 100,
+    delay: Math.random() * 0.6,
+    dur: 2.2 + Math.random() * 1.6,
+    size: 6 + Math.random() * 6,
+    color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+    rot: Math.random() * 360,
+    round: i % 3 === 0,
+  })), []);
+  const label = mayor.name.includes("Mayor") ? "The Mayor" : `Mayor ${mayor.name.split(" ").slice(-1)[0]}`;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-6" onClick={onClose}>
+      <div className="pointer-events-none fixed inset-0 z-10 overflow-hidden">
+        {pieces.map((c, i) => (
+          <span key={i} className="absolute top-[-20px] block" style={{
+            left: `${c.left}%`, width: c.size, height: c.round ? c.size : c.size * 0.45, background: c.color,
+            borderRadius: c.round ? "9999px" : "2px", transform: `rotate(${c.rot}deg)`,
+            animation: `confetti ${c.dur}s ${c.delay}s cubic-bezier(.2,.6,.4,1) forwards`,
+          }} />
+        ))}
+      </div>
+      <div className="relative w-full max-w-sm animate-[pop_.45s_cubic-bezier(.2,1.4,.4,1)] rounded-3xl bg-white p-6 text-center shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="text-5xl">🎉</div>
+        <div className="mt-2 text-2xl font-bold tracking-tight text-slate-900">Wow! {label} said they&apos;re supportive!</div>
+        <div className="mt-4 flex items-center justify-center gap-3">
+          <Avatar name={mayor.name} />
+          <div className="text-left">
+            <div className="text-sm font-semibold text-slate-900">{mayor.name}</div>
+            <div className="text-xs text-slate-500">{mayor.title}</div>
+          </div>
+        </div>
+        <p className="mt-4 rounded-2xl bg-emerald-50 p-3 text-left text-[14px] leading-relaxed text-emerald-900">&ldquo;{ev.text}&rdquo;</p>
+        <div className="mt-3 flex justify-center gap-2 text-[11px] font-semibold">
+          <span className="rounded-full bg-blue-50 px-2 py-1 text-blue-700">📅 Meeting requested</span>
+          <span className="rounded-full bg-blue-50 px-2 py-1 text-blue-700">🏛️ Council agenda item</span>
+        </div>
+        <button onClick={onView} className="mt-5 w-full rounded-xl bg-blue-700 py-3 text-[15px] font-semibold text-white active:bg-blue-800">View reply</button>
+        <button onClick={onClose} className="mt-2 w-full py-2 text-sm font-medium text-slate-500">Keep the campaign going</button>
+      </div>
     </div>
   );
 }
