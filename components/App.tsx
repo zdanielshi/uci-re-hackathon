@@ -48,10 +48,10 @@ export default function App() {
   const targets = officials.filter((o) => selected.has(o.id)).sort((a, b) => priority(b) - priority(a));
 
   return (
-    <div className="min-h-dvh bg-slate-100">
-      <div className="mx-auto flex min-h-dvh max-w-md flex-col bg-white shadow-sm">
+    <div className="min-h-dvh bg-leaf">
+      <div className="mx-auto flex min-h-dvh max-w-md flex-col bg-cream">
         <Header step={step} onBack={step === "setup" || step === "scan" ? undefined : back} onReset={() => go("setup")} />
-        <main className="flex-1 px-4 pb-28 pt-4">
+        <main className="flex-1 px-4 pb-28 pt-5">
           {step === "setup" && (
             <Setup county={county} setCounty={setCounty} agenda={agenda} setAgenda={setAgenda} persona={persona} setPersona={setPersona} onGo={() => go("scan")} />
           )}
@@ -66,7 +66,7 @@ export default function App() {
           {step === "campaign" && <Campaign targets={targets} persona={persona} agenda={agenda} onLaunch={() => go("console")} onBack={back} />}
           {step === "console" && <Console targets={targets} />}
         </main>
-        <footer className="px-4 pb-6 text-center text-[11px] leading-snug text-slate-400">
+        <footer className="px-4 pb-6 text-center font-mono text-[10px] leading-snug text-sage">
           Demo only. All outreach is simulated — no messages are sent. Stances and replies are illustrative.
         </footer>
       </div>
@@ -88,27 +88,27 @@ const PREV: Partial<Record<Step, Step>> = { map: "setup", campaign: "map", conso
 function Header({ step, onBack, onReset }: { step: Step; onBack?: () => void; onReset: () => void }) {
   const idx = STEPS.findIndex((s) => s.id === (step === "scan" ? "setup" : step));
   return (
-    <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 px-4 pb-3 pt-4 backdrop-blur">
+    <header className="sticky top-0 z-20 border-b-[3px] border-ink bg-pine px-4 pb-3 pt-4">
       <div className="flex items-center justify-between gap-2">
         {onBack && (
-          <button onClick={onBack} aria-label="Back" className="-ml-1 grid h-9 w-9 shrink-0 place-items-center rounded-full text-slate-700 active:bg-slate-100">
+          <button onClick={onBack} aria-label="Back" className="-ml-1 grid h-9 w-9 shrink-0 place-items-center rounded-full border-2 border-ink bg-sun text-ink shadow-[2px_2px_0_#14231a] active:translate-x-px active:translate-y-px active:shadow-none">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
           </button>
         )}
         <button onClick={onReset} className="mr-auto flex min-w-0 items-center gap-2">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-blue-700 text-sm font-bold text-white">BB</span>
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full border-[2.5px] border-ink bg-sun font-display text-[17px] text-ink">B³</span>
           <span className="text-left">
-            <span className="block text-[15px] font-semibold leading-tight text-slate-900">Build Baby Build</span>
-            <span className="block text-[11px] leading-tight text-slate-500">Your autonomous housing lobbyist</span>
+            <span className="display block text-[22px] leading-none text-sun">Build Baby Build</span>
+            <span className="mt-0.5 block truncate font-mono text-[10px] leading-tight text-pine-light">Your autonomous housing lobbyist</span>
           </span>
         </button>
-        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700">● Agent ready</span>
+        {!onBack && <span className="shrink-0 rounded-full border-2 border-ink bg-sun px-2 py-0.5 font-mono text-[10px] font-bold text-ink">● READY</span>}
       </div>
       <div className="mt-3 flex gap-1.5">
         {STEPS.map((s, i) => (
           <div key={s.id} className="flex-1">
-            <div className={`h-1 rounded-full ${i <= idx ? "bg-blue-700" : "bg-slate-200"}`} />
-            <div className={`mt-1 text-[10px] font-medium ${i <= idx ? "text-blue-700" : "text-slate-400"}`}>{s.label}</div>
+            <div className={`h-1.5 rounded-full ${i <= idx ? "bg-sun" : "bg-white/25"}`} />
+            <div className={`mt-1 font-mono text-[10px] font-bold uppercase tracking-wider ${i <= idx ? "text-sun" : "text-pine-light/70"}`}>{s.label}</div>
           </div>
         ))}
       </div>
@@ -120,13 +120,13 @@ function Header({ step, onBack, onReset }: { step: Step; onBack?: () => void; on
 
 function PrimaryButton({ children, onClick, onBack }: { children: React.ReactNode; onClick: () => void; onBack?: () => void }) {
   return (
-    <div className="fixed inset-x-0 bottom-0 z-30 mx-auto flex max-w-md gap-2 border-t border-slate-200 bg-white/95 px-4 pb-[max(16px,env(safe-area-inset-bottom))] pt-3 backdrop-blur">
+    <div className="fixed inset-x-0 bottom-0 z-30 mx-auto flex max-w-md gap-2.5 border-t-[3px] border-ink bg-cream px-4 pb-[max(16px,env(safe-area-inset-bottom))] pt-3">
       {onBack && (
-        <button onClick={onBack} className="shrink-0 rounded-xl border border-slate-300 px-4 py-3.5 text-[15px] font-semibold text-slate-700 active:bg-slate-100">
+        <button onClick={onBack} className="sticker press shrink-0 px-4 py-3 font-display text-[18px] uppercase text-ink">
           ← Back
         </button>
       )}
-      <button onClick={onClick} className="min-w-0 flex-1 truncate rounded-xl bg-blue-700 px-3 py-3.5 text-[15px] font-semibold text-white shadow-sm active:bg-blue-800">
+      <button onClick={onClick} className="press min-w-0 flex-1 truncate rounded-[14px] border-[2.5px] border-ink bg-pine px-3 py-3 font-display text-[20px] uppercase tracking-wide text-sun shadow-[4px_4px_0_#14231a]">
         {children}
       </button>
     </div>
@@ -134,47 +134,51 @@ function PrimaryButton({ children, onClick, onBack }: { children: React.ReactNod
 }
 
 const stanceStyle: Record<string, string> = {
-  Champion: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-  Persuadable: "bg-amber-50 text-amber-700 ring-amber-200",
-  Skeptic: "bg-rose-50 text-rose-700 ring-rose-200",
+  Champion: "bg-good-soft text-good",
+  Persuadable: "bg-sun-soft text-[#8a6a00]",
+  Skeptic: "bg-bad-soft text-bad",
 };
 const sentStyle: Record<Sentiment, string> = {
-  Supportive: "bg-emerald-50 text-emerald-700",
-  Noncommittal: "bg-slate-100 text-slate-600",
-  Opposed: "bg-rose-50 text-rose-700",
+  Supportive: "bg-good-soft text-good",
+  Noncommittal: "bg-mist text-sage",
+  Opposed: "bg-bad-soft text-bad",
 };
 
 function Pill({ s }: { s: string }) {
-  return <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 ${stanceStyle[s]}`}>{s}</span>;
+  return <span className={`rounded-full border-[1.5px] border-ink px-2 py-0.5 font-mono text-[10px] font-bold uppercase ${stanceStyle[s]}`}>{s}</span>;
 }
 
 /* ---------------- Setup ---------------- */
 
 function Setup(p: { county: string; setCounty: (c: string) => void; agenda: AgendaId; setAgenda: (a: AgendaId) => void; persona: PersonaId; setPersona: (x: PersonaId) => void; onGo: () => void }) {
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Developers have lobbyists.<br />Now renters do too.</h1>
-        <p className="mt-2 text-sm text-slate-600">Pick a county and an agenda. The agent finds everyone with power over housing and runs a personalized outreach campaign.</p>
+        <span className="inline-block -rotate-2 rounded-full bg-ink px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-widest text-sun">Paid for by renters, probably</span>
+        <h1 className="display mt-3 text-[44px] text-ink">Developers have lobbyists.<br /><span className="text-pine">Now renters do too.</span></h1>
+        <p className="mt-3 text-[15px] leading-snug text-sage">Pick a county and an agenda. The agent finds everyone with power over housing and runs a personalized outreach campaign.</p>
       </div>
 
       <label className="block">
-        <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">County</span>
-        <select value={p.county} onChange={(e) => p.setCounty(e.target.value)} className="mt-1.5 w-full rounded-xl border border-slate-300 bg-white px-3 py-3 text-[15px] text-slate-900">
+        <span className="lbl">County</span>
+        <div className="relative mt-2">
+          <select value={p.county} onChange={(e) => p.setCounty(e.target.value)} className="sticker w-full appearance-none px-3.5 py-3 pr-10 text-[16px] font-semibold text-ink">
           {COUNTIES.map((c) => <option key={c}>{c}</option>)}
         </select>
+          <svg className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#14231a" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
+        </div>
       </label>
 
       <div>
-        <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Agenda</span>
-        <div className="mt-1.5 grid gap-2">
+        <span className="lbl">Agenda</span>
+        <div className="mt-2 grid gap-3">
           {AGENDAS.map((a) => (
             <button key={a.id} onClick={() => p.setAgenda(a.id)}
-              className={`flex items-center gap-3 rounded-xl px-3 py-3 text-left ${p.agenda === a.id ? "border-2 border-blue-700 bg-blue-50" : "border border-slate-300"}`}>
+              className={`press flex items-center gap-3 px-3 py-3 text-left ${p.agenda === a.id ? "sticker-sel" : "sticker"}`}>
               <span className="text-xl">{a.emoji}</span>
               <span>
-                <span className={`block text-[15px] ${p.agenda === a.id ? "font-semibold text-slate-900" : "text-slate-800"}`}>{a.label}</span>
-                <span className="block text-xs text-slate-600">{a.sub}</span>
+                <span className="block text-[15px] font-extrabold leading-tight text-ink">{a.label}</span>
+                <span className={`mt-0.5 block text-[12px] ${p.agenda === a.id ? "text-ink/75" : "text-sage"}`}>{a.sub}</span>
               </span>
             </button>
           ))}
@@ -182,11 +186,11 @@ function Setup(p: { county: string; setCounty: (c: string) => void; agenda: Agen
       </div>
 
       <div>
-        <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">I&apos;m lobbying as</span>
-        <div className="mt-1.5 grid gap-2">
+        <span className="lbl">I&apos;m lobbying as</span>
+        <div className="mt-2 grid gap-3">
           {PERSONAS.map((x) => (
             <button key={x.id} onClick={() => p.setPersona(x.id)}
-              className={`rounded-xl border px-3 py-3 text-left text-[15px] ${p.persona === x.id ? "border-blue-700 bg-blue-50 font-semibold text-blue-900" : "border-slate-300 text-slate-700"}`}>
+              className={`press px-3.5 py-3 text-left text-[15px] font-extrabold text-ink ${p.persona === x.id ? "sticker-sel" : "sticker"}`}>
               {x.label}
             </button>
           ))}
@@ -218,11 +222,12 @@ function Scan({ county, count, onDone }: { county: string; count: number; onDone
   }, [n, lines.length, onDone]);
   return (
     <div className="pt-10">
-      <div className="mx-auto mb-6 h-14 w-14 animate-spin rounded-full border-4 border-blue-100 border-t-blue-700" />
-      <ul className="space-y-2">
+      <div className="mx-auto mb-6 h-16 w-16 animate-spin rounded-full border-[5px] border-ink border-t-sun border-r-sun" />
+      <div className="display mb-5 text-center text-[30px] text-ink">Canvassing the county…</div>
+      <ul className="sticker space-y-2 p-4">
         {lines.slice(0, n).map((l, i) => (
-          <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
-            <span className="text-emerald-600">✓</span>{l}
+          <li key={i} className="flex items-start gap-2 font-mono text-[12px] text-ink">
+            <span className="font-bold text-good">✓</span>{l}
           </li>
         ))}
       </ul>
@@ -237,18 +242,18 @@ function PowerMap(p: { officials: Official[]; seeded: boolean; county: string; s
   const counts = { Champion: 0, Persuadable: 0, Skeptic: 0 } as Record<string, number>;
   p.officials.forEach((o) => counts[o.stance]++);
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <div>
-        <h2 className="text-xl font-bold text-slate-900">Power map</h2>
-        <p className="text-sm text-slate-600">{p.officials.length} people with power over housing in {p.county.split(",")[0]}.</p>
-        {!p.seeded && <p className="mt-1 rounded-lg bg-amber-50 px-2 py-1 text-xs text-amber-800">Generated roster — verified data available for Orange County.</p>}
+        <h2 className="display text-[36px] text-ink">Power map</h2>
+        <p className="mt-1 text-sm text-sage">{p.officials.length} people with power over housing in {p.county.split(",")[0]}.</p>
+        {!p.seeded && <p className="mt-2 rounded-lg border-2 border-ink bg-sun-soft px-2 py-1 font-mono text-[11px] text-ink">Generated roster — verified data available for Orange County.</p>}
       </div>
 
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 gap-2.5">
         {(["Champion", "Persuadable", "Skeptic"] as const).map((s) => (
-          <div key={s} className={`rounded-xl p-2.5 text-center ring-1 ${stanceStyle[s]}`}>
-            <div className="text-xl font-bold">{counts[s]}</div>
-            <div className="text-[11px] font-medium">{s}s</div>
+          <div key={s} className="sticker p-2 text-center">
+            <div className={`font-display text-[32px] leading-tight ${s === "Champion" ? "text-good" : s === "Skeptic" ? "text-bad" : "text-[#b08800]"}`}>{counts[s]}</div>
+            <div className="font-mono text-[10px] font-bold uppercase text-sage">{s}s</div>
           </div>
         ))}
       </div>
@@ -258,19 +263,19 @@ function PowerMap(p: { officials: Official[]; seeded: boolean; county: string; s
         if (!list.length) return null;
         return (
           <section key={tier}>
-            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{tier} · {list.length}</h3>
-            <div className="space-y-2">
+            <h3 className="lbl mb-2.5">{tier} · {list.length}</h3>
+            <div className="space-y-3">
               {list.map((o) => (
-                <div key={o.id} className={`flex items-center gap-3 rounded-xl border p-3 ${p.selected.has(o.id) ? "border-slate-200" : "border-slate-200 opacity-40"}`}>
+                <div key={o.id} className={`sticker flex items-center gap-3 p-3 ${p.selected.has(o.id) ? "" : "opacity-45"}`}>
                   <button onClick={() => setOpen(o)} className="flex min-w-0 flex-1 items-center gap-3 text-left">
                     <Avatar name={o.name} />
                     <div className="min-w-0 flex-1">
-                      <div className="truncate text-[14px] font-semibold text-slate-900">{o.name}</div>
-                      <div className="truncate text-xs text-slate-500">{o.title}</div>
-                      <div className="mt-1 flex items-center gap-2"><Pill s={o.stance} /><span className="text-[11px] text-slate-500">Priority {priority(o)}</span></div>
+                      <div className="truncate text-[15px] font-extrabold text-ink">{o.name}</div>
+                      <div className="truncate text-xs text-sage">{o.title}</div>
+                      <div className="mt-1.5 flex items-center gap-2"><Pill s={o.stance} /><span className="font-mono text-[10px] font-bold text-sage">PRIORITY {priority(o)}</span></div>
                     </div>
                   </button>
-                  <input type="checkbox" checked={p.selected.has(o.id)} onChange={() => p.toggle(o.id)} className="h-5 w-5 accent-blue-700" />
+                  <input type="checkbox" checked={p.selected.has(o.id)} onChange={() => p.toggle(o.id)} className="h-6 w-6 accent-[#0d5c3a]" />
                 </div>
               ))}
             </div>
@@ -288,7 +293,7 @@ function Avatar({ name }: { name: string }) {
   const initials = name.split(" ").filter((w) => /^[A-Z]/.test(w)).slice(0, 2).map((w) => w[0]).join("");
   const hue = [...name].reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
   return (
-    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-xs font-bold text-white" style={{ background: `hsl(${hue} 45% 45%)` }}>
+    <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full border-[2.5px] border-ink font-display text-[15px] text-white" style={{ background: `hsl(${hue} 42% 38%)` }}>
       {initials}
     </div>
   );
@@ -297,22 +302,22 @@ function Avatar({ name }: { name: string }) {
 function Bar({ label, v }: { label: string; v: number }) {
   return (
     <div>
-      <div className="flex justify-between text-xs text-slate-600"><span>{label}</span><span>{v}/10</span></div>
-      <div className="mt-1 h-2 rounded-full bg-slate-100"><div className="h-2 rounded-full bg-blue-700" style={{ width: `${v * 10}%` }} /></div>
+      <div className="flex justify-between text-xs font-semibold text-ink"><span>{label}</span><span className="font-mono">{v}/10</span></div>
+      <div className="mt-1.5 h-3.5 overflow-hidden rounded-full border-2 border-ink bg-mist"><div className="h-full rounded-full bg-sun" style={{ width: `${v * 10}%` }} /></div>
     </div>
   );
 }
 
 function Sheet({ o, onClose }: { o: Official; onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center bg-slate-900/40" onClick={onClose}>
-      <div className="w-full max-w-md rounded-t-2xl bg-white p-5 pb-8" onClick={(e) => e.stopPropagation()}>
-        <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-slate-300" />
+    <div className="fixed inset-0 z-40 flex items-end justify-center bg-ink/50" onClick={onClose}>
+      <div className="w-full max-w-md rounded-t-3xl border-x-[3px] border-t-[3px] border-ink bg-cream p-5 pb-8" onClick={(e) => e.stopPropagation()}>
+        <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-ink" />
         <div className="flex items-center gap-3">
           <Avatar name={o.name} />
           <div>
-            <div className="text-lg font-bold text-slate-900">{o.name}</div>
-            <div className="text-sm text-slate-500">{o.title} · {o.jurisdiction}</div>
+            <div className="display text-[26px] text-ink">{o.name}</div>
+            <div className="text-sm text-sage">{o.title} · {o.jurisdiction}</div>
           </div>
         </div>
         <div className="mt-3"><Pill s={o.stance} /></div>
@@ -320,13 +325,13 @@ function Sheet({ o, onClose }: { o: Official; onClose: () => void }) {
           <Bar label="Influence over housing" v={o.influence} />
           <Bar label="Persuadability" v={o.persuadability} />
         </div>
-        <div className="mt-4 rounded-xl bg-slate-50 p-3 text-sm">
-          <div className="text-xs font-semibold uppercase text-slate-500">Why they matter</div>
-          <p className="mt-1 text-slate-800">{o.why}</p>
-          <div className="mt-3 text-xs font-semibold uppercase text-slate-500">Angle</div>
-          <p className="mt-1 text-slate-800">{o.hook}</p>
+        <div className="sticker mt-4 p-3 text-sm">
+          <div className="lbl">Why they matter</div>
+          <p className="mt-1 text-ink">{o.why}</p>
+          <div className="lbl mt-3">Angle</div>
+          <p className="mt-1 text-ink">{o.hook}</p>
         </div>
-        <button onClick={onClose} className="mt-4 w-full rounded-xl border border-slate-300 py-3 text-sm font-semibold text-slate-700">Close</button>
+        <button onClick={onClose} className="sticker press mt-5 w-full py-3 font-display text-[18px] uppercase text-ink">Close</button>
       </div>
     </div>
   );
@@ -349,35 +354,35 @@ function Campaign({ targets, persona, agenda, onLaunch, onBack }: { targets: Off
   const [i, setI] = useState(0);
   const [tab, setTab] = useState<"email" | "call">("email");
   const o = targets[i];
-  if (!o) return <p className="text-sm text-slate-600">No targets selected.</p>;
+  if (!o) return <p className="text-sm text-sage">No targets selected.</p>;
   const email = draftEmail(o, persona, agenda);
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <div>
-        <h2 className="text-xl font-bold text-slate-900">Campaign drafts</h2>
-        <p className="text-sm text-slate-600">{targets.length} personalized emails, {targets.length} call scripts, ranked by priority.</p>
+        <h2 className="display text-[36px] text-ink">Campaign drafts</h2>
+        <p className="mt-1 text-sm text-sage">{targets.length} personalized emails, {targets.length} call scripts, ranked by priority.</p>
       </div>
 
-      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
+      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-2 pt-0.5">
         {targets.map((t, k) => (
-          <button key={t.id} onClick={() => setI(k)} className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium ${k === i ? "border-blue-700 bg-blue-700 text-white" : "border-slate-300 text-slate-700"}`}>
+          <button key={t.id} onClick={() => setI(k)} className={`shrink-0 rounded-full border-2 border-ink px-3 py-1.5 text-xs font-extrabold ${k === i ? "bg-sun text-ink shadow-[2px_2px_0_#14231a]" : "bg-paper text-ink"}`}>
             {t.name.split(" ").slice(-1)[0]}
           </button>
         ))}
       </div>
 
-      <div className="rounded-2xl border border-slate-200">
-        <div className="flex items-center gap-3 border-b border-slate-200 p-3">
+      <div className="sticker overflow-hidden">
+        <div className="flex items-center gap-3 border-b-[2.5px] border-ink p-3">
           <Avatar name={o.name} />
           <div className="min-w-0 flex-1">
-            <div className="truncate text-sm font-semibold text-slate-900">{o.name}</div>
-            <div className="truncate text-xs text-slate-500">{o.title}</div>
+            <div className="truncate text-[15px] font-extrabold text-ink">{o.name}</div>
+            <div className="truncate text-xs text-sage">{o.title}</div>
           </div>
           <Pill s={o.stance} />
         </div>
-        <div className="flex border-b border-slate-200 text-sm">
+        <div className="flex border-b-[2.5px] border-ink text-sm">
           {(["email", "call"] as const).map((t) => (
-            <button key={t} onClick={() => setTab(t)} className={`flex-1 py-2 font-medium ${tab === t ? "border-b-2 border-blue-700 text-blue-700" : "text-slate-500"}`}>
+            <button key={t} onClick={() => setTab(t)} className={`flex-1 py-2.5 font-extrabold ${tab === t ? "bg-sun text-ink" : "bg-paper text-sage"}`}>
               {t === "email" ? "✉️ Email" : "📞 Call script"}
             </button>
           ))}
@@ -385,18 +390,18 @@ function Campaign({ targets, persona, agenda, onLaunch, onBack }: { targets: Off
         <div className="p-3">
           {tab === "email" ? (
             <>
-              <div className="text-xs text-slate-500">Subject</div>
-              <div className="mb-2 text-sm font-semibold text-slate-900">{email.subject}</div>
-              <pre className="whitespace-pre-wrap font-sans text-[13px] leading-relaxed text-slate-800"><Typewriter key={o.id + persona + agenda} text={email.body} /></pre>
+              <div className="lbl">Subject</div>
+              <div className="mb-3 mt-0.5 text-[15px] font-extrabold text-ink">{email.subject}</div>
+              <pre className="whitespace-pre-wrap font-sans text-[13px] leading-relaxed text-ink"><Typewriter key={o.id + persona + agenda} text={email.body} /></pre>
             </>
           ) : (
-            <p className="text-[13px] leading-relaxed text-slate-800"><Typewriter key={o.id + "call" + agenda} text={callScript(o, agenda)} /></p>
+            <p className="text-[13px] leading-relaxed text-ink"><Typewriter key={o.id + "call" + agenda} text={callScript(o, agenda)} /></p>
           )}
         </div>
       </div>
 
-      <div className="rounded-xl bg-blue-50 p-3 text-xs text-blue-900">
-        <b>Plan:</b> Email all targets → call top {Math.min(10, targets.length)} offices → auto follow-up on replies within 48h → draft public comments for next meetings.
+      <div className="rounded-[14px] border-[2.5px] border-dashed border-ink bg-sun-soft p-3 text-xs text-ink">
+        <b className="font-mono uppercase">Plan:</b> Email all targets → call top {Math.min(10, targets.length)} offices → auto follow-up on replies within 48h → draft public comments for next meetings.
       </div>
 
       <PrimaryButton onClick={onLaunch} onBack={onBack}>🚀 Launch campaign</PrimaryButton>
@@ -536,59 +541,59 @@ function Console({ targets }: { targets: Official[] }) {
   const opp = replies.filter((r) => r.tag === "Opposed").length;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-slate-900">Campaign live</h2>
-        <span className="flex items-center gap-1.5 rounded-full bg-rose-50 px-2 py-0.5 text-[11px] font-semibold text-rose-700"><span className="h-2 w-2 animate-pulse rounded-full bg-rose-600" />LIVE</span>
+        <h2 className="display text-[36px] text-ink">Campaign live</h2>
+        <span className="flex items-center gap-1.5 rounded-full border-2 border-ink bg-coral px-2.5 py-1 font-mono text-[11px] font-bold text-ink shadow-[2px_2px_0_#14231a]"><span className="h-2 w-2 animate-pulse rounded-full bg-ink" />LIVE</span>
       </div>
 
-      <div className="space-y-3 rounded-2xl border border-slate-200 p-3">
+      <div className="sticker space-y-3.5 p-3.5">
         <Progress label="✉️ Emails sent" v={emails} max={N} />
         <Progress label="👀 Opened" v={opened} max={N} />
         <Progress label="📞 Office calls" v={calls} max={callTotal} />
         <Progress label="📝 Public comments" v={comments} max={Math.max(6, comments)} />
       </div>
 
-      <div className="grid grid-cols-3 gap-2">
-        <Stat n={sup} label="Supportive" cls="text-emerald-700" />
-        <Stat n={non} label="Noncommittal" cls="text-slate-700" />
-        <Stat n={opp} label="Opposed" cls="text-rose-700" />
+      <div className="grid grid-cols-3 gap-2.5">
+        <Stat n={sup} label="Supportive" cls="text-good" />
+        <Stat n={non} label="Noncommittal" cls="text-ink" />
+        <Stat n={opp} label="Opposed" cls="text-bad" />
       </div>
 
-      <div className="flex rounded-xl bg-slate-100 p-1 text-sm">
+      <div className="flex rounded-full border-[2.5px] border-ink bg-paper p-1 text-sm">
         {(["feed", "replies"] as const).map((t) => (
-          <button key={t} onClick={() => setTab(t)} className={`flex-1 rounded-lg py-1.5 font-medium ${tab === t ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"}`}>
+          <button key={t} onClick={() => setTab(t)} className={`flex-1 rounded-full py-1.5 font-extrabold ${tab === t ? "bg-ink text-sun" : "text-sage"}`}>
             {t === "feed" ? "Activity" : `Inbox (${replies.length})`}
           </button>
         ))}
       </div>
 
       {tab === "feed" ? (
-        <ul className="space-y-2">
+        <ul className="space-y-2.5">
           {feed.map((e) => (
-            <li key={e.id} className="animate-[fadein_.3s_ease-out] rounded-xl border border-slate-200 p-2.5">
+            <li key={e.id} className="sticker animate-[fadein_.3s_ease-out] p-2.5">
               <div className="flex items-start gap-2">
                 <span className="text-base leading-5">{e.icon}</span>
                 <div className="min-w-0 flex-1">
-                  <div className="flex justify-between gap-2"><span className="truncate text-[13px] font-semibold text-slate-900">{e.who}</span><span className="shrink-0 text-[10px] text-slate-400">{e.t}</span></div>
-                  <div className="text-[13px] text-slate-600">{e.text}</div>
-                  {e.sub && <div className="mt-1 rounded-lg bg-slate-50 px-2 py-1 text-[12px] italic text-slate-600">{e.sub}</div>}
+                  <div className="flex justify-between gap-2"><span className="truncate text-[13px] font-extrabold text-ink">{e.who}</span><span className="shrink-0 font-mono text-[10px] text-sage">{e.t}</span></div>
+                  <div className="text-[13px] text-sage">{e.text}</div>
+                  {e.sub && <div className="mt-1.5 rounded-lg bg-sun-soft px-2 py-1 text-[12px] italic text-ink/80">{e.sub}</div>}
                 </div>
               </div>
             </li>
           ))}
         </ul>
       ) : (
-        <ul className="space-y-2">
-          {replies.length === 0 && <li className="py-6 text-center text-sm text-slate-400">Waiting for replies…</li>}
+        <ul className="space-y-2.5">
+          {replies.length === 0 && <li className="py-6 text-center font-mono text-sm text-sage">Waiting for replies…</li>}
           {replies.map((r) => (
-            <li key={r.id} className="rounded-xl border border-slate-200 p-3">
+            <li key={r.id} className="sticker p-3">
               <div className="flex items-center justify-between gap-2">
-                <span className="truncate text-[13px] font-semibold text-slate-900">{r.who}</span>
-                {r.tag && <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${sentStyle[r.tag]}`}>{r.tag}</span>}
+                <span className="truncate text-[13px] font-extrabold text-ink">{r.who}</span>
+                {r.tag && <span className={`shrink-0 rounded-full border-[1.5px] border-ink px-2 py-0.5 font-mono text-[10px] font-bold uppercase ${sentStyle[r.tag]}`}>{r.tag}</span>}
               </div>
-              <p className="mt-1 text-[13px] text-slate-700">&ldquo;{r.text}&rdquo;</p>
-              <div className="mt-1 text-[10px] text-slate-400">{r.t} · simulated</div>
+              <p className="mt-1 text-[13px] text-ink">&ldquo;{r.text}&rdquo;</p>
+              <div className="mt-1 font-mono text-[10px] text-sage">{r.t} · simulated</div>
             </li>
           ))}
         </ul>
@@ -599,7 +604,7 @@ function Console({ targets }: { targets: Official[] }) {
   );
 }
 
-const CONFETTI_COLORS = ["#1d4ed8", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4"];
+const CONFETTI_COLORS = ["#ffd23f", "#0d5c3a", "#ff5a5f", "#14231a", "#ffffff", "#7fd1a6"];
 
 function WinModal({ ev, mayor, onView, onClose }: { ev: Ev; mayor: Official; onView: () => void; onClose: () => void }) {
   const pieces = useMemo(() => Array.from({ length: 80 }, (_, i) => ({
@@ -613,7 +618,7 @@ function WinModal({ ev, mayor, onView, onClose }: { ev: Ev; mayor: Official; onV
   })), []);
   const label = mayor.name.includes("Mayor") ? "The Mayor" : `Mayor ${mayor.name.split(" ").slice(-1)[0]}`;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-6" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 px-6" onClick={onClose}>
       <div className="pointer-events-none fixed inset-0 z-10 overflow-hidden">
         {pieces.map((c, i) => (
           <span key={i} className="absolute top-[-20px] block" style={{
@@ -623,23 +628,24 @@ function WinModal({ ev, mayor, onView, onClose }: { ev: Ev; mayor: Official; onV
           }} />
         ))}
       </div>
-      <div className="relative w-full max-w-sm animate-[pop_.45s_cubic-bezier(.2,1.4,.4,1)] rounded-3xl bg-white p-6 text-center shadow-2xl" onClick={(e) => e.stopPropagation()}>
-        <div className="text-5xl">🎉</div>
-        <div className="mt-2 text-2xl font-bold tracking-tight text-slate-900">Wow! {label} said they&apos;re supportive!</div>
+      <div className="relative w-full max-w-sm animate-[pop_.45s_cubic-bezier(.2,1.4,.4,1)] rounded-3xl border-[3px] border-ink bg-cream p-6 text-center shadow-[6px_6px_0_#14231a]" onClick={(e) => e.stopPropagation()}>
+        <div className="absolute -top-4 left-1/2 -translate-x-1/2 -rotate-3 rounded-full border-[2.5px] border-ink bg-coral px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-widest text-ink">Big win</div>
+        <div className="text-4xl">🎉</div>
+        <div className="display mt-2 text-[30px] text-ink">Wow! <span className="text-pine">{label}</span> said they&apos;re supportive!</div>
         <div className="mt-4 flex items-center justify-center gap-3">
           <Avatar name={mayor.name} />
           <div className="text-left">
-            <div className="text-sm font-semibold text-slate-900">{mayor.name}</div>
-            <div className="text-xs text-slate-500">{mayor.title}</div>
+            <div className="text-sm font-extrabold text-ink">{mayor.name}</div>
+            <div className="text-xs text-sage">{mayor.title}</div>
           </div>
         </div>
-        <p className="mt-4 rounded-2xl bg-emerald-50 p-3 text-left text-[14px] leading-relaxed text-emerald-900">&ldquo;{ev.text}&rdquo;</p>
-        <div className="mt-3 flex justify-center gap-2 text-[11px] font-semibold">
-          <span className="rounded-full bg-blue-50 px-2 py-1 text-blue-700">📅 Meeting requested</span>
-          <span className="rounded-full bg-blue-50 px-2 py-1 text-blue-700">🏛️ Council agenda item</span>
+        <p className="sticker-sel mt-4 p-3 text-left text-[14px] font-medium leading-relaxed text-ink">&ldquo;{ev.text}&rdquo;</p>
+        <div className="mt-3 flex flex-wrap justify-center gap-2 text-[11px] font-bold">
+          <span className="whitespace-nowrap rounded-full border-2 border-ink bg-paper px-2 py-1 text-ink">📅 Meeting requested</span>
+          <span className="whitespace-nowrap rounded-full border-2 border-ink bg-paper px-2 py-1 text-ink">🏛️ Council agenda</span>
         </div>
-        <button onClick={onView} className="mt-5 w-full rounded-xl bg-blue-700 py-3 text-[15px] font-semibold text-white active:bg-blue-800">View reply</button>
-        <button onClick={onClose} className="mt-2 w-full py-2 text-sm font-medium text-slate-500">Keep the campaign going</button>
+        <button onClick={onView} className="press mt-5 w-full rounded-[14px] border-[2.5px] border-ink bg-pine py-3 font-display text-[20px] uppercase tracking-wide text-sun shadow-[4px_4px_0_#14231a]">View reply</button>
+        <button onClick={onClose} className="mt-2 w-full py-2 text-sm font-bold text-sage">Keep the campaign going</button>
       </div>
     </div>
   );
@@ -700,9 +706,9 @@ function Progress({ label, v, max }: { label: string; v: number; max: number }) 
   const pct = max ? Math.min(100, (v / max) * 100) : 0;
   return (
     <div>
-      <div className="flex justify-between text-xs font-medium text-slate-700"><span>{label}</span><span className="tabular-nums">{v}/{max}</span></div>
-      <div className="mt-1 h-2.5 overflow-hidden rounded-full bg-slate-100">
-        <div className="h-full rounded-full bg-blue-700 transition-all duration-700" style={{ width: `${pct}%` }} />
+      <div className="flex justify-between text-[13px] font-bold text-ink"><span>{label}</span><span className="font-mono tabular-nums">{v}/{max}</span></div>
+      <div className="mt-1.5 h-4 overflow-hidden rounded-full border-2 border-ink bg-mist">
+        <div className={`h-full rounded-full bg-sun transition-all duration-700 ${pct > 0 ? "border-r-2 border-ink" : ""}`} style={{ width: `${pct}%` }} />
       </div>
     </div>
   );
@@ -710,9 +716,9 @@ function Progress({ label, v, max }: { label: string; v: number; max: number }) 
 
 function Stat({ n, label, cls }: { n: number; label: string; cls: string }) {
   return (
-    <div className="rounded-xl border border-slate-200 p-2.5 text-center">
-      <div className={`text-2xl font-bold tabular-nums ${cls}`}>{n}</div>
-      <div className="text-[11px] text-slate-500">{label}</div>
+    <div className="sticker p-2 text-center">
+      <div className={`font-display text-[34px] leading-tight tabular-nums ${cls}`}>{n}</div>
+      <div className="text-[11px] text-sage">{label}</div>
     </div>
   );
 }
