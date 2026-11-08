@@ -411,7 +411,7 @@ function Campaign({ targets, persona, agenda, onLaunch, onBack }: { targets: Off
 
 /* ---------------- Console ---------------- */
 
-type Ev = { id: number; t: string; icon: string; who: string; text: string; tag?: Sentiment; sub?: string };
+type Ev = { id: number; t: string; icon: string; who: string; text: string; tag?: Sentiment; sub?: string; kind?: "mayor" | "trump" };
 
 function Console({ targets }: { targets: Official[] }) {
   const N = targets.length;
@@ -438,7 +438,7 @@ function Console({ targets }: { targets: Official[] }) {
       const now = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit", second: "2-digit" });
       const label = mayor.name.includes("Mayor") ? "the Mayor" : `Mayor ${mayor.name.split(" ").slice(-1)[0]}`;
       const ev: Ev = {
-        id: evId.current++, t: now, icon: "🎉", who: mayor.name, tag: "Supportive",
+        id: evId.current++, t: now, icon: "🎉", who: mayor.name, tag: "Supportive", kind: "mayor",
         text: `${label} is supportive. Let's meet next week — we'd like to bring this to City Council as an agenda item. Our scheduler will reach out today.`,
         sub: mayor.title,
       };
@@ -455,7 +455,7 @@ function Console({ targets }: { targets: Official[] }) {
     const t = setTimeout(() => {
       const now = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit", second: "2-digit" });
       const ev: Ev = {
-        id: evId.current++, t: now, icon: "🇺🇸", who: "President Donald J. Trump", tag: "Supportive",
+        id: evId.current++, t: now, icon: "🇺🇸", who: "President Donald J. Trump", tag: "Supportive", kind: "trump",
         text: "GREAT idea! Nobody knows housing like me. We are going to SLASH home prices — bigly, like never before. Build, baby, build! Thank you for your attention to this matter!",
         sub: "Parody · simulated",
       };
@@ -586,16 +586,24 @@ function Console({ targets }: { targets: Official[] }) {
       ) : (
         <ul className="space-y-2.5">
           {replies.length === 0 && <li className="py-6 text-center font-mono text-sm text-sage">Waiting for replies…</li>}
-          {replies.map((r) => (
-            <li key={r.id} className="sticker p-3">
+          {replies.map((r) => {
+            const open = r.kind === "mayor" ? () => setWin(r) : r.kind === "trump" ? () => setGold(r) : undefined;
+            const special = !!r.kind;
+            return (
+            <li key={r.id} onClick={open} role={open ? "button" : undefined}
+              className={`${r.kind === "trump" ? "rounded-[14px] border-[2.5px] border-[#b8860b] bg-[#0b1a33] p-3 shadow-[3px_3px_0_#b8860b]" : special ? "sticker-sel p-3" : "sticker p-3"} ${open ? "press cursor-pointer" : ""}`}>
               <div className="flex items-center justify-between gap-2">
-                <span className="truncate text-[13px] font-extrabold text-ink">{r.who}</span>
+                <span className={`truncate text-[13px] font-extrabold ${r.kind === "trump" ? "text-[#f5d061]" : "text-ink"}`}>{r.kind ? `${r.icon} ` : ""}{r.who}</span>
                 {r.tag && <span className={`shrink-0 rounded-full border-[1.5px] border-ink px-2 py-0.5 font-mono text-[10px] font-bold uppercase ${sentStyle[r.tag]}`}>{r.tag}</span>}
               </div>
-              <p className="mt-1 text-[13px] text-ink">&ldquo;{r.text}&rdquo;</p>
-              <div className="mt-1 font-mono text-[10px] text-sage">{r.t} · simulated</div>
+              <p className={`mt-1 text-[13px] ${r.kind === "trump" ? "text-[#fff4c2]" : "text-ink"}`}>&ldquo;{r.text}&rdquo;</p>
+              <div className={`mt-1 flex justify-between font-mono text-[10px] ${r.kind === "trump" ? "text-[#d4af37]" : special ? "text-ink/70" : "text-sage"}`}>
+                <span>{r.t} · {r.kind === "trump" ? "parody · " : ""}simulated</span>
+                {open && <span className="font-bold">TAP TO REPLAY 🎉</span>}
+              </div>
             </li>
-          ))}
+            );
+          })}
         </ul>
       )}
       {gold && <GoldModal ev={gold} onView={() => { setGold(null); setTab("replies"); }} onClose={() => setGold(null)} />}
