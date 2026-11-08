@@ -451,8 +451,13 @@ function Console({ targets }: { targets: Official[] }) {
   }, [mayor]);
 
   const [gold, setGold] = useState<Ev | null>(null);
-  useEffect(() => {
-    const t = setTimeout(() => {
+  // Trump fires 2s after the mayor popup is first dismissed (fallback: 22s after launch if there's no mayor target).
+  const trumpTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const trumpScheduled = useRef(false);
+  const scheduleTrump = (delay: number) => {
+    if (trumpScheduled.current) return;
+    trumpScheduled.current = true;
+    trumpTimer.current = setTimeout(() => {
       const now = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit", second: "2-digit" });
       const ev: Ev = {
         id: evId.current++, t: now, icon: "🇺🇸", who: "President Donald J. Trump", tag: "Supportive", kind: "trump",
@@ -464,9 +469,13 @@ function Console({ targets }: { targets: Official[] }) {
       setWin(null);
       setGold(ev);
       try { navigator.vibrate?.([120, 60, 120, 60, 250]); } catch {}
-    }, 22000);
-    return () => clearTimeout(t);
-  }, []);
+    }, delay);
+  };
+  useEffect(() => {
+    const fallback = mayor ? null : setTimeout(() => scheduleTrump(0), 22000);
+    return () => { if (fallback) clearTimeout(fallback); if (trumpTimer.current) clearTimeout(trumpTimer.current); };
+  }, [mayor]);
+  const closeMayor = () => { setWin(null); scheduleTrump(2000); };
 
   useEffect(() => {
     // Jittered scheduler: irregular gaps, occasional quick bursts and short lulls, so activity doesn't tick like a metronome.
@@ -607,7 +616,7 @@ function Console({ targets }: { targets: Official[] }) {
         </ul>
       )}
       {gold && <GoldModal ev={gold} onView={() => { setGold(null); setTab("replies"); }} onClose={() => setGold(null)} />}
-      {win && mayor && <WinModal ev={win} mayor={mayor} onView={() => { setWin(null); setTab("replies"); }} onClose={() => setWin(null)} />}
+      {win && mayor && <WinModal ev={win} mayor={mayor} onView={() => { closeMayor(); setTab("replies"); }} onClose={closeMayor} />}
     </div>
   );
 }
