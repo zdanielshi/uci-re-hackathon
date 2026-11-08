@@ -459,35 +459,52 @@ function Console({ targets }: { targets: Official[] }) {
       setWin(null);
       setGold(ev);
       try { navigator.vibrate?.([120, 60, 120, 60, 250]); } catch {}
-    }, 45000);
+    }, 30000);
     return () => clearTimeout(t);
   }, []);
 
   useEffect(() => {
-    const iv = setInterval(() => {
+    // Jittered scheduler: irregular gaps, occasional quick bursts and short lulls, so activity doesn't tick like a metronome.
+    const rand = (min: number, max: number) => min + Math.random() * (max - min);
+    let sent = 0;
+    let emailTicks = 0;
+    let timer: ReturnType<typeof setTimeout>;
+
+    const nextDelay = () => {
+      if (sent < N) return rand(250, 750); // email blast: brisk, uneven
+      const r = Math.random();
+      if (r < 0.18) return rand(180, 380); // burst
+      if (r < 0.3) return rand(1300, 2100); // lull
+      return rand(500, 1100);
+    };
+
+    const step = () => {
       const k = tick.current++;
       const now = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit", second: "2-digit" });
       const push = (e: Omit<Ev, "id" | "t">) => setFeed((f) => [{ ...e, id: evId.current++, t: now }, ...f].slice(0, 60));
-      const o = targets[k % N];
+      const o = targets[Math.floor(Math.random() * N)];
       if (!o) return;
 
-      const E = Math.ceil(N / 3);
-      if (k < E) {
-        const batch = targets.slice(k * 3, k * 3 + 3);
+      if (sent < N) {
+        const size = 1 + Math.floor(Math.random() * 4); // 1-4 emails per tick
+        const batch = targets.slice(sent, sent + size);
+        sent += batch.length;
+        emailTicks++;
         setEmails((x) => Math.min(N, x + batch.length));
         batch.forEach((b) => push({ icon: "✉️", who: b.name, text: "Personalized email delivered" }));
         return;
       }
-      const j = k - E;
+      const j = k - emailTicks;
       if (j < callTotal * 2) {
         if (j % 2 === 0) {
           const c = targets[j / 2];
           setCalls((x) => x + 1);
-          const vm = (j / 2) % 3 === 2;
-          push({ icon: vm ? "📼" : "📞", who: c.name, text: vm ? "Voicemail left (0:42)" : `Call connected (${1 + (j % 3)}:${String(10 + j * 7 % 50).padStart(2, "0")})`, sub: vm ? undefined : CALL_SNIPPETS[(j / 2) % CALL_SNIPPETS.length] });
+          const vm = Math.random() < 0.3;
+          const dur = `${Math.floor(rand(0, 3))}:${String(Math.floor(rand(5, 59))).padStart(2, "0")}`;
+          push({ icon: vm ? "📼" : "📞", who: c.name, text: vm ? `Voicemail left (0:${Math.floor(rand(28, 58))})` : `Call connected (${dur})`, sub: vm ? undefined : CALL_SNIPPETS[Math.floor(Math.random() * CALL_SNIPPETS.length)] });
         } else {
           const r = pool[(j * 3) % pool.length];
-          setOpened((x) => Math.min(N, x + 2));
+          setOpened((x) => Math.min(N, x + 1 + Math.floor(Math.random() * 3)));
           const rep = replyFor(r, j);
           const ev = { icon: "💬", who: r.name, text: rep.text, tag: rep.s };
           push({ ...ev, text: `Replied — ${rep.s.toLowerCase()}` });
@@ -495,20 +512,23 @@ function Console({ targets }: { targets: Official[] }) {
         }
         return;
       }
-      // endless phase: follow-ups, opens, more replies, public comments
-      const m = j % 4;
-      if (m === 0) { setOpened((x) => Math.min(N, x + 1)); push({ icon: "👀", who: o.name, text: "Email opened" }); }
-      else if (m === 1) { push({ icon: "🤖", who: o.name, text: FOLLOWUP_LINES[j % FOLLOWUP_LINES.length] }); }
-      else if (m === 2) { setComments((x) => x + 1); push({ icon: "📝", who: o.jurisdiction, text: "Public comment submitted for next meeting" }); }
+      // endless phase: weighted random mix of opens, follow-ups, public comments, replies
+      const r = Math.random();
+      if (r < 0.3) { setOpened((x) => Math.min(N, x + 1)); push({ icon: "👀", who: o.name, text: "Email opened" }); }
+      else if (r < 0.55) { push({ icon: "🤖", who: o.name, text: FOLLOWUP_LINES[Math.floor(Math.random() * FOLLOWUP_LINES.length)] }); }
+      else if (r < 0.72) { setComments((x) => x + 1); push({ icon: "📝", who: o.jurisdiction, text: "Public comment submitted for next meeting" }); }
       else {
-        const ro = pool[j % pool.length];
+        const ro = pool[Math.floor(Math.random() * pool.length)];
         const rep = replyFor(ro, j);
         const ev = { icon: "💬", who: ro.name, text: rep.text, tag: rep.s };
         push({ ...ev, text: `Replied — ${rep.s.toLowerCase()}` });
         setReplies((rs) => [{ ...ev, id: evId.current++, t: now }, ...rs].slice(0, 40));
       }
-    }, 700);
-    return () => clearInterval(iv);
+    };
+
+    const schedule = () => { timer = setTimeout(() => { step(); schedule(); }, nextDelay()); };
+    schedule();
+    return () => clearTimeout(timer);
   }, [targets, N, callTotal, pool]);
 
   const sup = replies.filter((r) => r.tag === "Supportive").length;
