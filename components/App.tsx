@@ -459,7 +459,7 @@ function Console({ targets }: { targets: Official[] }) {
       setWin(null);
       setGold(ev);
       try { navigator.vibrate?.([120, 60, 120, 60, 250]); } catch {}
-    }, 30000);
+    }, 22000);
     return () => clearTimeout(t);
   }, []);
 
