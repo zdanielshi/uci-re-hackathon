@@ -460,7 +460,7 @@ function Console({ targets }: { targets: Official[] }) {
     trumpTimer.current = setTimeout(() => {
       const now = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit", second: "2-digit" });
       const ev: Ev = {
-        id: evId.current++, t: now, icon: "🇺🇸", who: "President Donald J. Trump", tag: "Supportive", kind: "trump",
+        id: evId.current++, t: now, icon: "🇺🇸", who: "President Ronald J. Trump", tag: "Supportive", kind: "trump",
         text: "GREAT idea! Nobody knows housing like me. We are going to SLASH home prices — bigly, like never before. Build, baby, build! Thank you for your attention to this matter!",
         sub: "Parody · simulated",
       };
@@ -698,9 +698,9 @@ function GoldModal({ ev, onView, onClose }: { ev: Ev; onView: () => void; onClos
           </div>
           <div className="mt-4 flex items-center justify-center gap-3">
             <div className="grid h-12 w-12 place-items-center rounded-full font-serif text-sm font-black text-[#0b1a33] ring-2 ring-[#f5d061]"
-              style={{ background: "linear-gradient(135deg,#fff4c2,#d4af37,#b8860b)" }}>DJT</div>
+              style={{ background: "linear-gradient(135deg,#fff4c2,#d4af37,#b8860b)" }}>RJT</div>
             <div className="text-left">
-              <div className="text-sm font-bold text-white">Donald J. Trump</div>
+              <div className="text-sm font-bold text-white">Ronald J. Trump</div>
               <div className="text-xs text-[#d4af37]">President of the United States</div>
             </div>
           </div>
